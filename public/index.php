@@ -5,7 +5,7 @@
  * @property string $user;
  */
 interface Transactions {
-    const WITHOUT_BALANCE = 0;
+    const EMPTY_BALANCE = 0;
     const MAX_AMOUNT_ABAILABLE = 100000000;
     const MIN_AMOUNT_ABAILABLE = 10;
 
@@ -16,7 +16,7 @@ interface Transactions {
 }
 
 interface CreditAccount extends Transactions {
-    const FEE = 0.5;
+    const FEE = 0.05;
     const OPEN_DISCOUNT = 10000;
     const LIMIT_CREDIT = 400000;
 
@@ -25,17 +25,39 @@ interface CreditAccount extends Transactions {
 }
 
 interface DebitAccount extends Transactions {
+    const INITIALIZE_BALANCE = 110000;
+
     public function saving($amount);
 }
 
 class Credit implements CreditAccount {
-    public static $balance = 0;
+    public static $balance = self::EMPTY_BALANCE;
     public $user = '';
 
-    public function __construct($balance, $user)
+    public function __construct(IUser $user)
     {
-        Credit::$balance = $balance - 10000;
+        self::$balance = Debit::$balance - 10000;
         $this->user = $user;
+    }
+
+    public function withdraw($amount)
+    {
+        if ($amount === 0) {
+            throw new Exception('indica una cantidad mayor a cero.');
+        }
+
+        if ($amount > self::$balance) {
+            throw new Exception('la cantidad es mayor al saldo disponible');
+        }
+
+        if (self::$balance === self::EMPTY_BALANCE) {
+            throw new Exception('la cuenta esta vacia no se puede retirar nada:');
+        }
+
+        $fee = $amount * self::FEE;
+        $amount += $fee;
+
+        return self::updateBalance(self::$balance - $amount);
     }
 
     public function balance()
@@ -46,11 +68,6 @@ class Credit implements CreditAccount {
     public function interesFree()
     {
         // TODO: Implement interesFree() method.
-    }
-
-    public static function updateBalance($newBalance)
-    {
-        return Credit::$balance = $newBalance;
     }
 
     public function pay($amount)
@@ -76,6 +93,22 @@ class Credit implements CreditAccount {
         // TODO: Implement transfer() method.
     }
 
+    public static function updateBalance($newBalance)
+    {
+        return Credit::$balance = $newBalance;
+    }
+}
+
+class Debit implements DebitAccount {
+    public $user;
+    public static $balance = 0;
+
+    public function __construct(IUser $user)
+    {
+        $this->user = $user;
+        self::$balance = self::INITIALIZE_BALANCE;
+    }
+
     public function withdraw($amount)
     {
         if ($amount === 0) {
@@ -86,25 +119,11 @@ class Credit implements CreditAccount {
             throw new Exception('la cantidad es mayor al saldo disponible');
         }
 
-        if (self::$balance === self::WITHOUT_BALANCE) {
+        if (self::$balance === self::EMPTY_BALANCE) {
             throw new Exception('la cuenta esta vacia no se puede retirar nada:');
         }
 
-        $fee = $amount * self::FEE;
-        $amount += $fee;
-
-        return self::updateBalance(self::$balance - $amount);
-    }
-}
-
-class Debit implements DebitAccount {
-    public static $balance = 0;
-    public $user = '';
-
-    public function __construct($balance, $user)
-    {
-        Debit::$balance = $balance;
-        $this->user = $user;
+        return self::updateBalance(self::$balance - $amount) . PHP_EOL;
     }
 
     public function balance()
@@ -125,11 +144,6 @@ class Debit implements DebitAccount {
         self::updateBalance(self::$balance + $amount);
     }
 
-    public static function updateBalance($newBalance)
-    {
-        return Debit::$balance = $newBalance;
-    }
-
     public function charge()
     {
         // TODO: Implement charge() method.
@@ -140,125 +154,148 @@ class Debit implements DebitAccount {
         // TODO: Implement transfer() method.
     }
 
-    public function withdraw($amount)
+    public static function updateBalance($newBalance)
     {
-        if ($amount === 0) {
-            throw new Exception('indica una cantidad mayor a cero.');
-        }
-
-        if ($amount > self::$balance) {
-            throw new Exception('la cantidad es mayor al saldo disponible');
-        }
-
-        if (self::$balance === self::WITHOUT_BALANCE) {
-            throw new Exception('la cuenta esta vacia no se puede retirar nada:');
-        }
-
-        return self::updateBalance(self::$balance - $amount) . PHP_EOL;
+        return Debit::$balance = $newBalance;
     }
 }
 
 class Account {
-    public $accounts = [];
+    public Debit $debit;
+    public Credit $credit;
 
-    public function __construct($type, $balance, $user)
+    // en ves de pasar una clase en concreto puede ser una Interface IUser
+    // que pueda  mutar sin alterar all lo demas
+    public function __construct(IUser $user)
     {
-        $this->create($type, $user, $balance);
-    }
-
-    public function create($type, $user, $balance)
-    {
-        if ($type !== 'debit') {
-            return 'solo se pueden crear cuentas de tipo debito.';
-        }
-
-        $this->accounts['debit'] = new Debit($balance, $user);
-        $this->accounts['credit'] = new Credit($balance, $user);
-
-        return;
+        $user->isAdmin();
+        $this->debit = new Debit($user);
+        $this->credit = new Credit($user);
     }
 }
 
-class User {
-    public $id = '';
-    public $account;
-    public $registered = false;
+interface IUser {
+//    public function setRegister();
+//
+//    public function statusRegister();
+
+    public function isAdmin();
+}
+
+abstract class BaseUser {
+    protected $registered = false;
 
     public function __construct()
     {
-        $this->id = uniqid();
+        if (! $this->statusRegister()) {
+            return 'usuario no registrado';
+        }
     }
 
-    public function register()
+    public function setRegister()
     {
         $this->registered = true;
-        $this->account = new Account('debit', 110000, $this->id);
     }
 
-    public function showAccount()
+    public function statusRegister()
     {
-        return $this->account ?? 'no tienes cuenta';
+        return $this->registered;
     }
 }
+
+// si existe un guest user deberia implemtar una interface user para que no choquen con estos metodos
+class User extends BaseUser implements IUser {
+    public $id = '';
+    public $name;
+    public $email;
+    public $phone;
+
+    public function __construct($name, $email, $phone)
+    {
+        $this->id = uniqid();
+        $this->name = $name;
+        $this->email = $email;
+        $this->phone = $phone;
+    }
+
+    public function isAdmin()
+    {
+        return false;
+    }
+}
+
+class AdminUser extends BaseUser implements IUser {
+
+    public $name;
+    public bool $isAdmin = true;
+
+    public function __construct($name)
+    {
+        $this->name = $name;
+        parent::setRegister();
+    }
+
+    public function isAdmin()
+    {
+        return $this->isAdmin;
+    }
+}
+
 
 $user = new User('john doe', 'john@gmail.com', '5529889306');
-$user->register();
-
-class Atm {
-    public $account = [];
-
-    public function __construct($user)
-    {
-        if (array_key_exists('debit', $user->account->accounts)) {
-            $this->account['debit'] = $user->account->accounts['debit'];
-        }
-
-        if (array_key_exists('credit', $user->account->accounts)) {
-            $this->account['credit'] = $user->account->accounts['credit'];
-        }
-    }
-
-    public function selectTypeAccount($type)
-    {
-        return $this->account[$type];
-    }
-}
-
-$atm = (new Atm($user))->selectTypeAccount('debit');
-
-echo "<pre>"; var_dump($atm);
-
-print 'balance cuenta debito:' . $atm->balance();
-
-print PHP_EOL;
-
-print 'retiro cuenta debito de 2000:' . $atm->withdraw(2000);
-
-print PHP_EOL;
-
-print 'deposito de 100 en ahorros:' . $atm->saving(100);
-
-print PHP_EOL;
-
-print 'balance cuenta debito:' . $atm->balance();
+$user->setRegister();
+print '<pre>';var_dump('1er User:', $user);
 
 print '<br>';
 
+$userTwo = new AdminUser('Jhon Dos');
+$accountTwo = new Account($userTwo);
+echo "<pre>"; var_dump('Account two', $accountTwo);
 
-$atmCredit = (new Atm($user))->selectTypeAccount('credit');
+
+$account = new Account($user);
+echo "<pre>"; var_dump($account);
+// object value != entidad
+
+class Atm {
+    public Debit | Credit $account;
+
+    public function __construct(Debit | Credit $account)
+    {
+        $this->account = $account;
+    }
+}
+
+$atmDebit = new Atm($account->debit);
+echo "<pre>"; var_dump('ATM-cuenta', $atmDebit);
+
+print 'retiro cuenta debito de 2000:'. $atmDebit->account->withDraw(2000);
 
 print PHP_EOL;
 
-print 'balance cuenta credito:' . $atmCredit->balance();
+print 'ahorro cuenta debito de 100:'. $atmDebit->account->saving(100);
 
 print PHP_EOL;
 
-print 'retiro cuenta debito de 2000 (+ 0.5%) :' . $atmCredit->withdraw(2000);
+print 'balance cuenta debito:'. $atmDebit->account->balance();
+
+print '<br>';
+
+$account = new Account($user);
+$atmCredit = new Atm($account->credit);
 
 print PHP_EOL;
 
-print 'pago cuenta de credito:' . $atmCredit->pay(1000);
+print 'balance cuenta credito:' . $atmCredit->account->balance();
 
 print PHP_EOL;
 
-print 'balance cuenta credito:' . $atmCredit->balance();
+print 'retiro cuenta debito de 2000 (+ 0.05%) :' . $atmCredit->account->withdraw(2000);
+
+print PHP_EOL;
+
+print 'pago cuenta credito de 1000:' . $atmCredit->account->pay(1000);
+
+print PHP_EOL;
+
+print 'balance cuenta credito:' . $atmCredit->account->balance();

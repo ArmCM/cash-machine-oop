@@ -1,4 +1,7 @@
 <?php
+interface IUser {
+    public function isAdmin();
+}
 
 /**
  * @property int $balance;
@@ -160,39 +163,10 @@ class Debit implements DebitAccount {
     }
 }
 
-class Account {
-    public Debit $debit;
-    public Credit $credit;
-
-    // en ves de pasar una clase en concreto puede ser una Interface IUser
-    // que pueda  mutar sin alterar all lo demas
-    public function __construct(IUser $user)
-    {
-        $user->isAdmin();
-        $this->debit = new Debit($user);
-        $this->credit = new Credit($user);
-    }
-}
-
-interface IUser {
-//    public function setRegister();
-//
-//    public function statusRegister();
-
-    public function isAdmin();
-}
-
 abstract class BaseUser {
     protected $registered = false;
 
-    public function __construct()
-    {
-        if (! $this->statusRegister()) {
-            return 'usuario no registrado';
-        }
-    }
-
-    public function setRegister()
+    public function register()
     {
         $this->registered = true;
     }
@@ -203,7 +177,9 @@ abstract class BaseUser {
     }
 }
 
-// si existe un guest user deberia implemtar una interface user para que no choquen con estos metodos
+/**
+ * @TODO si existe un guest user deberia implemtar una interface user para que no choquen con estos metodos
+ */
 class User extends BaseUser implements IUser {
     public $id = '';
     public $name;
@@ -232,30 +208,38 @@ class AdminUser extends BaseUser implements IUser {
     public function __construct($name)
     {
         $this->name = $name;
-        parent::setRegister();
+        parent::register();
     }
 
     public function isAdmin()
     {
         return $this->isAdmin;
     }
+
+    public function isRegistered()
+    {
+
+    }
 }
 
+class Account {
+    public Debit $debit;
+    public Credit $credit;
 
-$user = new User('john doe', 'john@gmail.com', '5529889306');
-$user->setRegister();
-print '<pre>';var_dump('1er User:', $user);
+    // en ves de pasar una clase en concreto puede ser una Interface IUser
+    // que pueda  mutar sin alterar all lo demas
+    public function __construct(IUser $user)
+    {
+        if (! $user->statusRegister()) {
+            throw new Exception("El usuario {$user->name} no esta registrado, es neecsario registralo para poder acceder a una cuenta:");
+        }
 
-print '<br>';
+        $user->isAdmin();
 
-$userTwo = new AdminUser('Jhon Dos');
-$accountTwo = new Account($userTwo);
-echo "<pre>"; var_dump('Account two', $accountTwo);
-
-
-$account = new Account($user);
-echo "<pre>"; var_dump($account);
-// object value != entidad
+        $this->debit = new Debit($user);
+        $this->credit = new Credit($user);
+    }
+}
 
 class Atm {
     public Debit | Credit $account;
@@ -266,36 +250,50 @@ class Atm {
     }
 }
 
+$user = new User('john doe', 'john@gmail.com', '5529889306');
+$user->register();
+print '<pre>';var_dump('registered User:', $user);
+
+$account = new Account($user);
+echo "<pre>"; var_dump('Account:', $account);
+// object value != entidad
+
+//print '<br>';
+//
+//$admin = new AdminUser('Jhon Dos');
+//$adminAccount = new Account($admin);
+//echo "<pre>"; var_dump('Admin Account', $adminAccount);
+//
 $atmDebit = new Atm($account->debit);
 echo "<pre>"; var_dump('ATM-cuenta', $atmDebit);
 
-print 'retiro cuenta debito de 2000:'. $atmDebit->account->withDraw(2000);
+//print 'retiro cuenta debito de 2000:'. $atmDebit->account->withDraw(2000);
+//
+//print PHP_EOL;
+//
+//print 'ahorro cuenta debito de 100:'. $atmDebit->account->saving(100);
+//
+//print PHP_EOL;
+//
+//print 'balance cuenta debito:'. $atmDebit->account->balance();
+//
+//print '<br>';
 
-print PHP_EOL;
-
-print 'ahorro cuenta debito de 100:'. $atmDebit->account->saving(100);
-
-print PHP_EOL;
-
-print 'balance cuenta debito:'. $atmDebit->account->balance();
-
-print '<br>';
-
-$account = new Account($user);
-$atmCredit = new Atm($account->credit);
-
-print PHP_EOL;
-
-print 'balance cuenta credito:' . $atmCredit->account->balance();
-
-print PHP_EOL;
-
-print 'retiro cuenta debito de 2000 (+ 0.05%) :' . $atmCredit->account->withdraw(2000);
-
-print PHP_EOL;
-
-print 'pago cuenta credito de 1000:' . $atmCredit->account->pay(1000);
-
-print PHP_EOL;
-
-print 'balance cuenta credito:' . $atmCredit->account->balance();
+//$account = new Account($user);
+//$atmCredit = new Atm($account->credit);
+//
+//print PHP_EOL;
+//
+//print 'balance cuenta credito:' . $atmCredit->account->balance();
+//
+//print PHP_EOL;
+//
+//print 'retiro cuenta debito de 2000 (+ 0.05%) :' . $atmCredit->account->withdraw(2000);
+//
+//print PHP_EOL;
+//
+//print 'pago cuenta credito de 1000:' . $atmCredit->account->pay(1000);
+//
+//print PHP_EOL;
+//
+//print 'balance cuenta credito:' . $atmCredit->account->balance();

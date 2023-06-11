@@ -252,32 +252,33 @@ class Atm {
 
 $user = new User('john doe', 'john@gmail.com', '5529889306');
 $user->register();
-print '<pre>';var_dump('registered User:', $user);
+print '<pre>';
+//print '<pre>';var_dump('registered User:', $user);
 
-$account = new Account($user);
-echo "<pre>"; var_dump('Account:', $account);
-// object value != entidad
+try {
+    $account = new Account($user);
+    //echo "<pre>"; var_dump('Account:', $account);
 
-//print '<br>';
-//
-//$admin = new AdminUser('Jhon Dos');
-//$adminAccount = new Account($admin);
-//echo "<pre>"; var_dump('Admin Account', $adminAccount);
-//
-$atmDebit = new Atm($account->debit);
-echo "<pre>"; var_dump('ATM-cuenta', $atmDebit);
+    print PHP_EOL;
 
-//print 'retiro cuenta debito de 2000:'. $atmDebit->account->withDraw(2000);
-//
-//print PHP_EOL;
-//
-//print 'ahorro cuenta debito de 100:'. $atmDebit->account->saving(100);
-//
-//print PHP_EOL;
-//
-//print 'balance cuenta debito:'. $atmDebit->account->balance();
-//
-//print '<br>';
+    $atmDebit = new Atm($account->debit);
+
+    print 'balance cuenta Debito: '. $atmDebit->account->balance();
+
+    print PHP_EOL;
+
+    print 'retiro cuenta debito de $20: '. $atmDebit->account->withDraw(2000);
+
+    print PHP_EOL;
+
+    print 'ahorro cuenta debito de 1000: '. $atmDebit->account->saving(1000);
+
+    print PHP_EOL;
+
+    print 'balance cuenta Debito: '. $atmDebit->account->balance();
+} catch (\Exception $exception) {
+    echo $exception->getMessage();
+}
 
 //$account = new Account($user);
 //$atmCredit = new Atm($account->credit);

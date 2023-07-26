@@ -3,13 +3,14 @@
 namespace App\Services;
 
 use App\Contracts\DebitAccount;
+use App\Contracts\User;
 
 class Debit implements DebitAccount
 {
-    public $user;
-    public static $balance = 0;
+    public User $user;
+    public static int $balance = 0;
 
-    public function __construct(IUser $user)
+    public function __construct(User $user)
     {
         $this->user = $user;
         self::$balance = self::INITIALIZE_BALANCE_AMOUNT - CreditAccount::OPEN_DISCOUNT;

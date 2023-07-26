@@ -2,7 +2,7 @@
 
 namespace App\Contracts;
 
-interface DebitAccount
+interface DebitAccount extends Transactions
 {
     const INITIALIZE_BALANCE_AMOUNT = 110000;
 

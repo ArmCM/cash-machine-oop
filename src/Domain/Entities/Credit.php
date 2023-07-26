@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Entities;
 
 use App\Domain\Interfaces\CreditAccount;
 use Exception;

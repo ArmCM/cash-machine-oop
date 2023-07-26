@@ -1,13 +1,10 @@
 <?php
 
-namespace App\Entities;
+namespace App\Domain\Entities;
 
-class User {
-    public string $id;
-    public string $name;
-    public string $email;
-    public string $phone;
-    protected bool $registered = false;
+use App\Domain\Interfaces\UserInterface;
+
+class User extends BaseUser implements UserInterface {
 
     public function __construct($name, $email, $phone)
     {
@@ -25,5 +22,10 @@ class User {
     public function statusRegister(): bool
     {
         return $this->registered;
+    }
+
+    public function isAdmin()
+    {
+        // TODO: Implement isAdmin() method.
     }
 }

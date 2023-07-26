@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
-use App\Contracts\DebitAccount;
-use App\Contracts\User;
+use App\Domain\Interfaces\CreditAccount;
+use App\Domain\Interfaces\DebitAccount;
+use App\Domain\Interfaces\User;
+use Exception;
 
 class Debit implements DebitAccount
 {
@@ -41,11 +43,11 @@ class Debit implements DebitAccount
 
     public function saving($amount)
     {
-        if ($amount >= self::MAX_AMOUNT_ABAILABLE) {
+        if ($amount >= self::MAX_AMOUNT_AVAILABLE) {
             throw new Exception('no se permiten transacciones superiores o igual a 1M');
         }
 
-        if ($amount < self::MIN_AMOUNT_ABAILABLE) {
+        if ($amount < self::MIN_AMOUNT_AVAILABLE) {
             throw new Exception('no se permiten transacciones menores a 1 centavo');
         }
 

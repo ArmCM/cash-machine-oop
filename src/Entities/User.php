@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Entities;
 
 class User {
     public string $id;

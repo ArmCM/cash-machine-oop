@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Contracts\CreditAccount;
+use App\Domain\Interfaces\CreditAccount;
 use Exception;
 
 class Credit implements CreditAccount

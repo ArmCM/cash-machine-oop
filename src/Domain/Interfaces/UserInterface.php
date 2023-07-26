@@ -2,7 +2,7 @@
 
 namespace App\Domain\Interfaces;
 
-interface User
+interface UserInterface
 {
     public function isAdmin();
 }

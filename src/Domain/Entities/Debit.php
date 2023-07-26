@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Entities;
 
 use App\Domain\Interfaces\CreditAccount;
 use App\Domain\Interfaces\DebitAccount;
-use App\Domain\Interfaces\User;
+use App\Domain\Interfaces\UserInterface;
 use Exception;
 
 class Debit implements DebitAccount
 {
-    public User $user;
+    public UserInterface $user;
     public static int $balance = 0;
 
-    public function __construct(User $user)
+    public function __construct(UserInterface $user)
     {
         $this->user = $user;
         self::$balance = self::INITIALIZE_BALANCE_AMOUNT - CreditAccount::OPEN_DISCOUNT;

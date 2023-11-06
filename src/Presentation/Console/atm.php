@@ -11,41 +11,57 @@ try {
     $user = new User('John Doe', 'john@example.com', '5529889306');
     $user->register();
 
-    echo "<pre>"; var_dump($user);
+    echo "<pre>";
 
-    // Create a debit account service and ATM service
+    // Create an account service and ATM service
     $account = new Account($user);
-    $debitAtmService = new Atm($account->debit);
+    $debitAccount = new Atm($account->debit);
 
-    echo 'balance cuenta Debito: '. $debitAtmService->balance();
-
-    echo PHP_EOL;
-
-    echo 'retiro cuenta debito de $20: '. $debitAtmService->withdraw(2000);
-
-    echo PHP_EOL;
-
-    echo 'balance despues del retiro de $20 cuenta Debito: '. $debitAtmService->balance();
-
-    echo PHP_EOL;
-
-    echo 'ahorro cuenta debito de $10: '. $debitAtmService->saving(1000);
-
-    echo PHP_EOL;
-
-    echo 'balance despues de ahorrar $10 cuenta Debito: '. $debitAtmService->balance();
+    echo "<h3>Debito</h3>";
+    echo "La cuenta Debito se abre inicialmente con $1100". PHP_EOL;
+    echo "La cuenta Crédito se abre tomando $100 de la cuenta de Debito.". PHP_EOL;
+    echo 'balance cuenta Debito: $' .$debitAccount->balance();
 
     echo PHP_EOL;
     echo PHP_EOL;
 
-    echo 'pago a cuenta de credito de $10 ' . $debitAtmService->pay(1000);
+    echo 'retiro cuenta debito de $20:' . $debitAccount->withdraw(2000);
 
     echo PHP_EOL;
 
-    echo 'balance cuenta Debito: '. $debitAtmService->balance();
+    echo 'balance después del retiro:'. '$' .$debitAccount->balance();
 
     echo PHP_EOL;
     echo PHP_EOL;
+
+    echo 'ahorro cuenta debito de $10: '. $debitAccount->saving(1000);
+
+    echo PHP_EOL;
+
+    echo 'balance:'. '$' .$debitAccount->balance();
+
+    echo PHP_EOL;
+
+    echo "pagar cuenta de crédito de $100 " . $debitAccount->pay(10000);
+
+   echo PHP_EOL;
+
+    echo "<h3>Crédito</h3>";
+
+    $creditAccount = new Atm($account->credit);
+
+    echo 'balance cuenta Crédito: $' .$creditAccount->balance();
+
+    echo PHP_EOL;
+
+    echo 'retiro cuenta crédito de $10 - ' . $creditAccount->withdraw(1000);
+    echo 'comisión de 5%:';
+
+    echo PHP_EOL;
+    echo PHP_EOL;
+
+    echo 'balance cuenta Crédito: $' .$creditAccount->balance();
+
 
 } catch (\Exception $exception) {
     echo "Error: {$exception->getMessage()}\n";

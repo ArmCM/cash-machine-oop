@@ -7,33 +7,37 @@ use Exception;
 
 class Credit implements CreditAccount
 {
-    public static int $balance = self::EMPTY_BALANCE;
+    public int $balance = self::EMPTY_BALANCE;
 
-    public function __construct(){}
+    public function __construct()
+    {
 
-    public function withdraw($amount): bool
+    }
+
+    public function withdraw($amount): void
     {
         if ($amount === 0) {
             throw new Exception('indica una cantidad mayor a cero.');
         }
 
-        if ($amount > self::$balance) {
+        if ($amount > $this->balance) {
             throw new Exception('la cantidad es mayor al saldo disponible');
         }
 
-        if (self::$balance === self::EMPTY_BALANCE) {
-            throw new Exception('la cuenta esta vacia no se puede retirar nada:');
+        if ($this->balance === self::EMPTY_BALANCE) {
+            throw new Exception('la cuenta esta vaciá no se puede retirar nada:');
         }
 
         $fee = $amount * self::FEE;
+
         $amount += $fee;
 
-        return self::updateBalance(self::$balance - $amount);
+        $this->subtractOnBalance($amount);
     }
 
     public function balance(): int
     {
-        return self::$balance;
+        return $this->balance;
     }
 
     public function charge()
@@ -46,7 +50,7 @@ class Credit implements CreditAccount
         // TODO: Implement transfer() method.
     }
 
-    public static function pay($amount): bool
+    public function pay($amount): bool
     {
         if ($amount >= self::LIMIT_CREDIT) {
             throw new Exception('no se puede abonar mas del limite permitido');
@@ -56,14 +60,17 @@ class Credit implements CreditAccount
             throw new Exception('has excedido el limite de la cuenta');
         }
 
-        return self::updateBalance(self::$balance + $amount);
+        return $this->addOnBalance( $amount);
     }
 
-    public static function updateBalance($newBalance): bool
+    public function addOnBalance($newBalance): bool
     {
-        Credit::$balance = $newBalance;
+        return $this->balance += $newBalance;
+    }
 
-        return true;
+    public function subtractOnBalance($newBalance): bool
+    {
+        return $this->balance -= $newBalance;
     }
 
     public function fee()

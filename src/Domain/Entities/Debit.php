@@ -10,38 +10,41 @@ use Exception;
 class Debit implements DebitAccount
 {
     public UserInterface $user;
-    public static int $balance = 0;
+    public int $balance = 0;
+    public Credit $credit;
 
-    public function __construct(UserInterface $user)
+    public function __construct(UserInterface $user, Credit $credit)
     {
         $this->user = $user;
-        self::$balance = self::INITIALIZE_BALANCE_AMOUNT - CreditAccount::OPEN_DISCOUNT;
-        Credit::updateBalance(CreditAccount::OPEN_DISCOUNT);
+        $this->balance = self::INITIALIZE_BALANCE_AMOUNT - CreditAccount::OPEN_DISCOUNT;
+        $this->credit = $credit;
+
+        $this->openCreditAccount();
     }
 
-    public function withdraw($amount)
+    public function withdraw($amount): void
     {
         if ($amount === 0) {
             throw new Exception('indica una cantidad mayor a cero.');
         }
 
-        if ($amount > self::$balance) {
+        if ($amount > $this->balance) {
             throw new Exception('la cantidad es mayor al saldo disponible');
         }
 
-        if (self::$balance === self::EMPTY_BALANCE) {
+        if ($this->balance === self::EMPTY_BALANCE) {
             throw new Exception('la cuenta esta vacia no se puede retirar nada:');
         }
 
-        self::updateBalance(self::$balance - $amount) . PHP_EOL;
+        $this->updateBalance($this->balance - $amount) . PHP_EOL;
     }
 
-    public function balance()
+    public function balance(): int
     {
-        return self::$balance;
+        return $this->balance;
     }
 
-    public function saving($amount)
+    public function saving($amount): void
     {
         if ($amount >= self::MAX_AMOUNT_AVAILABLE) {
             throw new Exception('no se permiten transacciones superiores o igual a 1M');
@@ -51,7 +54,7 @@ class Debit implements DebitAccount
             throw new Exception('no se permiten transacciones menores a 1 centavo');
         }
 
-        self::updateBalance(self::$balance + $amount);
+        self::updateBalance($this->balance + $amount);
     }
 
     public function charge()
@@ -64,8 +67,22 @@ class Debit implements DebitAccount
         // TODO: Implement transfer() method.
     }
 
-    public static function updateBalance($newBalance)
+    public function updateBalance($newBalance)
     {
-        return Debit::$balance = $newBalance;
+        return $this->balance += $newBalance;
+    }
+
+    public function openCreditAccount(): void
+    {
+        $this->credit->addOnBalance(CreditAccount::OPEN_DISCOUNT);
+    }
+
+    public function pay($amount): void
+    {
+        try {
+            $this->credit->pay($amount);
+        } catch (Exception $exception) {
+            echo $exception->getMessage();
+        }
     }
 }

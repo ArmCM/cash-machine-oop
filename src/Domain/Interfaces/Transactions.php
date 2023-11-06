@@ -12,4 +12,5 @@ interface Transactions
     public function charge();
     public function transfer();
     public function withDraw($amount);
+    public function pay($amount);
 }

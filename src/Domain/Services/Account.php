@@ -20,7 +20,7 @@ class Account
 
         $user->isAdmin();
 
-        $this->debit = new Debit($user);
         $this->credit = new Credit($user);
+        $this->debit = new Debit($user, $this->credit);
     }
 }

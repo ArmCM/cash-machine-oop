@@ -18,16 +18,16 @@ class Atm
     public function balance()
     {
         try {
-            return $this->account->balance();
+            return $this->account->balance()/100;
         } catch (\Exception $exception) {
             echo $exception->getMessage();
         }
     }
 
-    public function withdraw($amount)
+    public function withdraw($amount): void
     {
         try {
-            return $this->account->withDraw($amount);
+            $this->account->withDraw($amount);
         } catch (\Exception $exception) {
             echo $exception->getMessage();
         }
@@ -37,7 +37,7 @@ class Atm
     {
         try {
             if ($this->account instanceof Credit) {
-                throw new Exception('No se puede ahorrar en cuenta de credito.');
+                throw new Exception('No se puede ahorrar en cuenta de crédito.');
             }
 
             $this->account->saving($amount);
@@ -46,14 +46,18 @@ class Atm
         }
     }
 
-    public function pay($amount)
+    public function pay($amount): void
     {
-        if ($this->account instanceof Credit) {
-            throw new Exception('No se puedes pagar una tarjeta de credito con una cuenta de credito.');
+        if ($this->account instanceof Debit) {
+            try {
+                $this->account->pay($amount);
+            } catch (Exception $exception) {
+                echo $exception->getMessage();
+            }
         }
 
-        if (Credit::pay($amount)) {
-            Debit::updateBalance(Debit::$balance - $amount);
+        if ($this->account instanceof Credit) {
+
         }
     }
 }

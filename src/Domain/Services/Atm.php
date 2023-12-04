@@ -4,6 +4,7 @@ namespace App\Domain\Services;
 
 use App\Domain\Entities\Credit;
 use App\Domain\Entities\Debit;
+use App\Infrastructure\Exceptions\AtmException;
 use Exception;
 
 class Atm
@@ -15,19 +16,28 @@ class Atm
         $this->account = $account;
     }
 
-    public function balance()
+    /**
+     * @throws AtmException
+     */
+    public function balance(): float|int
     {
         try {
-            return $this->account->balance()/100;
+            return $this->account->balance() / 100;
         } catch (\Exception $exception) {
-            echo $exception->getMessage();
+            throw new AtmException('Error al obtener el saldo', $exception->getCode(), $exception);
         }
     }
 
     public function withdraw($amount): void
     {
         try {
-            $this->account->withDraw($amount);
+            if ($this->account instanceof Debit) {
+                $this->account->withDraw($amount);
+            }
+
+            if ($this->account instanceof Credit) {
+                $this->account->withDraw($amount);
+            }
         } catch (\Exception $exception) {
             echo $exception->getMessage();
         }
@@ -46,18 +56,17 @@ class Atm
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function pay($amount): void
     {
         if ($this->account instanceof Debit) {
-            try {
-                $this->account->pay($amount);
-            } catch (Exception $exception) {
-                echo $exception->getMessage();
-            }
+            $this->account->pay($amount);
         }
 
         if ($this->account instanceof Credit) {
-
+            //
         }
     }
 }

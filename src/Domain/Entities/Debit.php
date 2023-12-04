@@ -5,6 +5,7 @@ namespace App\Domain\Entities;
 use App\Domain\Interfaces\CreditAccount;
 use App\Domain\Interfaces\DebitAccount;
 use App\Domain\Interfaces\UserInterface;
+use App\Infrastructure\Exceptions\AtmException;
 use Exception;
 
 class Debit implements DebitAccount
@@ -22,6 +23,9 @@ class Debit implements DebitAccount
         $this->openCreditAccount();
     }
 
+    /**
+     * @throws Exception
+     */
     public function withdraw($amount): void
     {
         if ($amount === 0) {
@@ -29,11 +33,11 @@ class Debit implements DebitAccount
         }
 
         if ($amount > $this->balance) {
-            throw new Exception('la cantidad es mayor al saldo disponible');
+            throw new Exception('la cantidad es mayor al saldo disponible.');
         }
 
         if ($this->balance === self::EMPTY_BALANCE) {
-            throw new Exception('la cuenta esta vacia no se puede retirar nada:');
+            throw new Exception('la cuenta esta vaciá no se puede retirar nada:');
         }
 
         $this->updateBalance($this->balance - $amount) . PHP_EOL;
@@ -69,7 +73,7 @@ class Debit implements DebitAccount
 
     public function updateBalance($newBalance)
     {
-        return $this->balance += $newBalance;
+        return $this->balance = $newBalance;
     }
 
     public function openCreditAccount(): void
@@ -77,12 +81,16 @@ class Debit implements DebitAccount
         $this->credit->addOnBalance(CreditAccount::OPEN_DISCOUNT);
     }
 
+    /**
+     * @throws Exception
+     */
     public function pay($amount): void
     {
         try {
+            $this->updateBalance($this->balance() - $amount);
             $this->credit->pay($amount);
-        } catch (Exception $exception) {
-            echo $exception->getMessage();
+        } catch (AtmException $exception) {
+            echo $exception->getPayMessage();
         }
     }
 }

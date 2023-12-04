@@ -3,6 +3,7 @@
 namespace App\Domain\Entities;
 
 use App\Domain\Interfaces\CreditAccount;
+use App\Infrastructure\Exceptions\AtmException;
 use Exception;
 
 class Credit implements CreditAccount
@@ -14,6 +15,9 @@ class Credit implements CreditAccount
 
     }
 
+    /**
+     * @throws Exception
+     */
     public function withdraw($amount): void
     {
         if ($amount === 0) {
@@ -50,14 +54,17 @@ class Credit implements CreditAccount
         // TODO: Implement transfer() method.
     }
 
+    /**
+     * @throws Exception
+     */
     public function pay($amount): bool
     {
         if ($amount >= self::LIMIT_CREDIT) {
-            throw new Exception('no se puede abonar mas del limite permitido');
+            throw new AtmException('no se puede abonar más del limite permitido');
         }
 
         if (self::LIMIT_CREDIT === 0) {
-            throw new Exception('has excedido el limite de la cuenta');
+            throw new AtmException('has excedido el limite de la cuenta');
         }
 
         return $this->addOnBalance( $amount);
